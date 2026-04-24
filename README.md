@@ -26,8 +26,8 @@ Dark-mode-only UI, buttery smooth reader, session-based bookmarks & history — 
 ### 1 — Clone & Install
 
 ```bash
-git clone https://github.com/your-org/mangalfa.git
-cd mangalfa
+git clone https://github.com/ahmadmct/manga-app.git
+cd manga-app
 composer install
 ```
 
@@ -41,7 +41,7 @@ php artisan key:generate
 Edit `.env` — the only required setting:
 
 ```env
-MANGA_API_BASE_URL=http://127.0.0.1:3000/api
+MANGA_API_BASE_URL=https://mangaapi.arufaa.my.id/api
 ```
 
 ### 3 — Migrate (optional — for DB bookmarks)
@@ -165,7 +165,7 @@ All responses are cached for **5 minutes** (configurable via `MANGA_CACHE_TTL`).
 ## 🔧 Configuration (`config/manga.php`)
 
 ```php
-'api_base_url' => env('MANGA_API_BASE_URL', 'http://127.0.0.1:3000/api'),
+'api_base_url' => env('MANGA_API_BASE_URL', 'https://mangaapi.arufaa.my.id/api'),
 'cache_ttl'    => env('MANGA_CACHE_TTL', 300),   // seconds
 'timeout'      => env('MANGA_API_TIMEOUT', 15),   // HTTP timeout
 ```

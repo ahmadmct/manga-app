@@ -13,7 +13,7 @@ class MangaApiService
 
     public function __construct()
     {
-        $this->baseUrl = rtrim((string) config('manga.api_base_url', 'http://127.0.0.1:3000/api'), '/');
+        $this->baseUrl = rtrim((string) config('manga.api_base_url', 'https://mangaapi.arufaa.my.id/api'), '/');
         $this->cacheTtl = (int) config('manga.cache_ttl', 300);
         $this->timeout = (int) config('manga.timeout', 15);
     }

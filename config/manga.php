@@ -8,7 +8,7 @@ return [
     | The base URL for the manga API. This can be overridden in the .env file
     | using the MANGA_API_BASE_URL key.
     */
-    'api_base_url' => env('MANGA_API_BASE_URL', 'http://127.0.0.1:3000/api'),
+    'api_base_url' => env('MANGA_API_BASE_URL', 'https://mangaapi.arufaa.my.id/api'),
 
     /*
     |--------------------------------------------------------------------------
