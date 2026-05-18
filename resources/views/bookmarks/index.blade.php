@@ -32,6 +32,14 @@
                         loading="lazy"
                         onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 150%22><rect fill=%22%231a1a2e%22 width=%22100%22 height=%22150%22/></svg>'"
                     >
+                    @if(!empty($bookmark['unread_count']) && (int) $bookmark['unread_count'] > 0)
+                    <div class="absolute bottom-1.5 left-1.5">
+                        <span class="text-[10px] px-2 py-1 bg-accent/90 text-white rounded-lg backdrop-blur-sm shadow-lg shadow-accent/20"
+                              title="Unread chapters: {{ (int) $bookmark['unread_count'] }}">
+                            +{{ (int) $bookmark['unread_count'] }}
+                        </span>
+                    </div>
+                    @endif
                     @if(!empty($bookmark['type']))
                     <div class="absolute top-1.5 right-1.5">
                         <span class="text-[10px] px-1.5 py-0.5 bg-black/60 rounded text-slate-300 backdrop-blur-sm">{{ $bookmark['type'] }}</span>
