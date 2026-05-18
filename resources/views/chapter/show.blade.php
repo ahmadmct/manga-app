@@ -14,9 +14,22 @@
         -webkit-user-drag: none;
         pointer-events: none;
     }
-    .controls-hidden .reader-controls { opacity: 0; pointer-events: none; }
-    .controls-hidden .reader-top-bar { opacity: 0; pointer-events: none; }
-    .reader-controls, .reader-top-bar { transition: opacity 0.3s ease; }
+
+    /* Controls hidden state */
+    .reader-controls,
+    .reader-top-bar {
+        transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .reader-top-bar.hidden-bar {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-100%);
+    }
+    .reader-controls.hidden-bar {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(100%);
+    }
     
     .progress-bar { 
         position: fixed; 
@@ -42,10 +55,7 @@
     .lazy-img { opacity: 0; transition: opacity 0.3s ease; }
     .lazy-img.loaded { opacity: 1; }
 
-    /* Pinch-to-zoom support */
     .reader-container { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-
-    /* Mobile safe-area (iOS) */
     .reader-controls { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
 
     @media (max-width: 768px) {
@@ -59,7 +69,7 @@
 <!-- Reading Progress Bar -->
 <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
 
-<!-- Top Bar (hideable) -->
+<!-- Top Bar -->
 <div class="reader-top-bar glass fixed top-0 left-0 right-0 z-40 border-b border-purple-900/20 px-4 py-3" id="reader-top-bar" style="margin-top: 56px;">
     <div class="max-w-3xl mx-auto flex items-center justify-between">
         <a href="{{ route('manga.show', $mangaSlug) }}" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
@@ -120,10 +130,9 @@
     @endif
 </div>
 
-<!-- Bottom Controls (hideable) -->
+<!-- Bottom Controls -->
 <div class="reader-controls glass fixed bottom-0 left-0 right-0 z-40 border-t border-purple-900/20 px-4 py-3" id="reader-controls">
     <div class="max-w-3xl mx-auto">
-        <!-- Chapter Navigation -->
         <div class="flex items-center justify-between gap-4 mb-2">
             @if($prevSlug)
             <a href="{{ route('chapter.show', $prevSlug) }}" 
@@ -152,7 +161,6 @@
             @endif
         </div>
 
-        <!-- Progress Indicator -->
         <div class="flex items-center gap-2">
             <span class="text-xs text-slate-600 w-4">1</span>
             <div class="flex-1 h-1.5 bg-dark-600 rounded-full overflow-hidden">
@@ -168,49 +176,85 @@
 @push('scripts')
 <script>
     const totalPages = {{ count($images) }};
-    let controlsVisible = true;
-    let lastToggleTime = 0;
-    let lastTapTime = 0;
     let loadedImages = new Set();
+    let autoHideTimer = null;
+    let controlsVisible = true;
 
-    // Intersection Observer for lazy loading
+    const topBar     = document.getElementById('reader-top-bar');
+    const bottomBar  = document.getElementById('reader-controls');
+
+    // ── Show controls & reset auto-hide timer ──
+    function showControls() {
+        controlsVisible = true;
+        topBar.classList.remove('hidden-bar');
+        bottomBar.classList.remove('hidden-bar');
+        resetHideTimer();
+    }
+
+    // ── Hide controls immediately ──
+    function hideControls() {
+        controlsVisible = false;
+        topBar.classList.add('hidden-bar');
+        bottomBar.classList.add('hidden-bar');
+        clearTimeout(autoHideTimer);
+    }
+
+    // ── Auto-hide after 3 seconds of inactivity ──
+    function resetHideTimer() {
+        clearTimeout(autoHideTimer);
+        autoHideTimer = setTimeout(() => {
+            hideControls();
+        }, 3000);
+    }
+
+    // Start auto-hide on page load
+    resetHideTimer();
+
+    // ── Tap anywhere → show controls (and restart timer) ──
+    function handleReaderClick(event) {
+        if (!controlsVisible) {
+            // Controls hidden → tap shows them
+            showControls();
+        } else {
+            // Controls visible → tap resets the timer
+            resetHideTimer();
+        }
+    }
+
+    // ── Keep controls visible while hovering over them (desktop) ──
+    [topBar, bottomBar].forEach(el => {
+        el.addEventListener('mouseenter', () => clearTimeout(autoHideTimer));
+        el.addEventListener('mouseleave', () => resetHideTimer());
+    });
+
+    // ── Intersection Observer for lazy loading ──
     const imageObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                const wrapper = entry.target;
-                const index = parseInt(wrapper.dataset.index);
+                const index = parseInt(entry.target.dataset.index);
                 loadImage(index);
-                // Preload next 2
                 if (index + 1 < totalPages) loadImage(index + 1);
                 if (index + 2 < totalPages) loadImage(index + 2);
-                imageObserver.unobserve(wrapper);
+                imageObserver.unobserve(entry.target);
             }
         });
     }, { rootMargin: '200px 0px' });
 
-    // Observe all page wrappers
-    document.querySelectorAll('.page-wrapper').forEach(wrapper => {
-        imageObserver.observe(wrapper);
-    });
-
-    // Load first 3 images immediately
+    document.querySelectorAll('.page-wrapper').forEach(w => imageObserver.observe(w));
     [0, 1, 2].forEach(i => loadImage(i));
 
     function loadImage(index) {
         if (loadedImages.has(index)) return;
         const img = document.getElementById('img-' + index);
-        if (!img) return;
-        const src = img.dataset.src;
-        if (src) {
-            loadedImages.add(index);
-            img.src = src;
-        }
+        if (!img || !img.dataset.src) return;
+        loadedImages.add(index);
+        img.src = img.dataset.src;
     }
 
     function imageLoaded(index) {
-        const img = document.getElementById('img-' + index);
+        const img      = document.getElementById('img-' + index);
         const skeleton = document.getElementById('skeleton-' + index);
-        if (img) { img.classList.add('loaded'); }
+        if (img) img.classList.add('loaded');
         if (skeleton) skeleton.style.display = 'none';
     }
 
@@ -223,54 +267,20 @@
         }
     }
 
-    // Scroll progress tracking
+    // ── Scroll progress ──
     function updateProgress() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-        
-        document.getElementById('progress-bar').style.width = progress + '%';
-        document.getElementById('progress-fill').style.width = progress + '%';
+        const scrollTop  = window.pageYOffset || document.documentElement.scrollTop;
+        const docHeight  = document.documentElement.scrollHeight - window.innerHeight;
+        const progress   = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
 
-        // Update current page based on scroll
-        const currentPage = Math.max(1, Math.ceil((progress / 100) * totalPages));
-        document.getElementById('current-page').textContent = currentPage;
+        document.getElementById('progress-bar').style.width   = progress + '%';
+        document.getElementById('progress-fill').style.width  = progress + '%';
+        document.getElementById('current-page').textContent   = Math.max(1, Math.ceil((progress / 100) * totalPages));
     }
 
     window.addEventListener('scroll', updateProgress, { passive: true });
 
-    // Tap to toggle controls
-    function handleReaderClick(event) {
-        const now = Date.now();
-
-        // Double-tap: toggle header/footer visibility
-        if (now - lastTapTime < 260) {
-            lastTapTime = 0;
-            controlsVisible = !controlsVisible;
-            document.getElementById('reader-container').classList.toggle('controls-hidden', !controlsVisible);
-            return;
-        }
-
-        lastTapTime = now;
-
-        if (now - lastToggleTime < 300) return; // debounce
-        lastToggleTime = now;
-
-        const x = event.clientX;
-        const width = window.innerWidth;
-        
-        // Left/right thirds for navigation, middle to toggle
-        if (x < width * 0.2) {
-            // Left area - nothing (or prev page in future)
-        } else if (x > width * 0.8) {
-            // Right area - nothing (or next page)
-        } else {
-            // Middle: toggle UI
-            controlsVisible = !controlsVisible;
-            document.getElementById('reader-container').classList.toggle('controls-hidden', !controlsVisible);
-        }
-    }
-
+    // ── Fullscreen ──
     function toggleFullscreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen?.();
@@ -279,21 +289,19 @@
         }
     }
 
-    // Keyboard shortcuts
+    // ── Keyboard shortcuts ──
     document.addEventListener('keydown', e => {
         if (e.key === 'ArrowDown' || e.key === 'PageDown') {
             window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' });
         } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
             window.scrollBy({ top: -window.innerHeight * 0.8, behavior: 'smooth' });
         } else if (e.key === 'h' || e.key === 'H') {
-            controlsVisible = !controlsVisible;
-            document.getElementById('reader-container').classList.toggle('controls-hidden', !controlsVisible);
+            controlsVisible ? hideControls() : showControls();
         }
     });
 
-    // Save reading progress
+    // ── Save reading progress ──
     window.addEventListener('beforeunload', () => {
-        const progress = document.getElementById('progress-fill').style.width;
         fetch('{{ route("history.add") }}', {
             method: 'POST',
             credentials: 'same-origin',
