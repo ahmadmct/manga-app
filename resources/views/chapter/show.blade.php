@@ -302,7 +302,7 @@
 
     // ── Save reading progress ──
     window.addEventListener('beforeunload', () => {
-        fetch('{{ route("history.add") }}', {
+        fetch('{{ route("history.add", [], false) }}', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {

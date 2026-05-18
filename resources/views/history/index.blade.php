@@ -77,7 +77,7 @@
 <script>
 function clearHistory() {
     if (!confirm('Clear your entire reading history?')) return;
-    fetch('{{ route("history.add") }}', {
+    fetch('{{ route("history.add", [], false) }}', {
         method: 'POST',
         credentials: 'same-origin',
         headers: {

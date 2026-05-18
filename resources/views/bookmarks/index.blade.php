@@ -79,7 +79,7 @@
 @push('scripts')
 <script>
 function removeBookmark(slug, title, thumb, type) {
-    fetch('{{ route("bookmarks.toggle") }}', {
+    fetch('{{ route("bookmarks.toggle", [], false) }}', {
         method: 'POST',
         credentials: 'same-origin',
         headers: {

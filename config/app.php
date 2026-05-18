@@ -56,6 +56,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Force HTTPS Scheme
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, Laravel will generate all URLs using the HTTPS scheme.
+    | Useful when your app is behind a proxy / load balancer terminating TLS.
+    |
+    */
+
+    'force_https' => (bool) env('FORCE_HTTPS', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

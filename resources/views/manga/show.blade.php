@@ -183,7 +183,7 @@ function toggleBookmark(btn) {
     const type = btn.dataset.type;
     const icon = document.getElementById('bookmark-icon');
 
-    fetch('{{ route("bookmarks.toggle") }}', {
+    fetch('{{ route("bookmarks.toggle", [], false) }}', {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
