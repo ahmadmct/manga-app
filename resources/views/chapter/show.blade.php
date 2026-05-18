@@ -43,7 +43,7 @@
     .lazy-img.loaded { opacity: 1; }
 
     /* Pinch-to-zoom support */
-    .reader-container { touch-action: pan-y; }
+    .reader-container { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
     /* Mobile safe-area (iOS) */
     .reader-controls { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
@@ -170,6 +170,7 @@
     const totalPages = {{ count($images) }};
     let controlsVisible = true;
     let lastToggleTime = 0;
+    let lastTapTime = 0;
     let loadedImages = new Set();
 
     // Intersection Observer for lazy loading
@@ -241,6 +242,17 @@
     // Tap to toggle controls
     function handleReaderClick(event) {
         const now = Date.now();
+
+        // Double-tap: toggle header/footer visibility
+        if (now - lastTapTime < 260) {
+            lastTapTime = 0;
+            controlsVisible = !controlsVisible;
+            document.getElementById('reader-container').classList.toggle('controls-hidden', !controlsVisible);
+            return;
+        }
+
+        lastTapTime = now;
+
         if (now - lastToggleTime < 300) return; // debounce
         lastToggleTime = now;
 
@@ -284,6 +296,7 @@
         const progress = document.getElementById('progress-fill').style.width;
         fetch('{{ route("history.add") }}', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content

@@ -51,6 +51,8 @@ touch database/database.sqlite   # if using SQLite
 php artisan migrate
 ```
 
+Note: if your host uses `SESSION_DRIVER=database`, the app needs a `sessions` table. This repo includes the migration â€” just run `php artisan migrate` on the server after deploy.
+
 ### 4 — Serve
 
 ```bash

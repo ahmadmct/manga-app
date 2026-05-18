@@ -81,6 +81,7 @@
 function removeBookmark(slug, title, thumb, type) {
     fetch('{{ route("bookmarks.toggle") }}', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content

@@ -79,6 +79,7 @@ function clearHistory() {
     if (!confirm('Clear your entire reading history?')) return;
     fetch('{{ route("history.add") }}', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
