@@ -220,6 +220,7 @@
 </main>
 
 <!-- Mobile Bottom Navigation -->
+@if(!request()->routeIs('chapter.show'))
 <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-purple-900/20 px-2 py-2">
     <div class="flex items-center justify-around">
         <a href="{{ route('home') }}" class="bottom-nav-item flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl {{ request()->routeIs('home') ? 'active' : '' }}">
@@ -254,6 +255,7 @@
         </a>
     </div>
 </nav>
+@endif
 
 @stack('scripts')
 </body>

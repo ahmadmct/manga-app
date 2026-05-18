@@ -45,6 +45,9 @@
     /* Pinch-to-zoom support */
     .reader-container { touch-action: pan-y; }
 
+    /* Mobile safe-area (iOS) */
+    .reader-controls { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
+
     @media (max-width: 768px) {
         .reader-image { max-width: 100%; }
     }
@@ -78,7 +81,7 @@
 </div>
 
 <!-- Reader Container -->
-<div class="reader-container min-h-screen pt-28 pb-28 bg-dark-950" id="reader-container" onclick="handleReaderClick(event)">
+<div class="reader-container min-h-screen pt-28 pb-[calc(7rem+env(safe-area-inset-bottom))] bg-dark-950" id="reader-container" onclick="handleReaderClick(event)">
     
     @if(!empty($images))
     <div id="pages-container" class="space-y-0">
@@ -122,13 +125,6 @@
     <div class="max-w-3xl mx-auto">
         <!-- Chapter Navigation -->
         <div class="flex items-center justify-between gap-4 mb-2">
-            @php
-                $prevChapter = $chapter['prev_chapter'] ?? $chapter['previous_chapter'] ?? null;
-                $nextChapter = $chapter['next_chapter'] ?? null;
-                $prevSlug = is_array($prevChapter) ? ($prevChapter['chapter_endpoint'] ?? $prevChapter['endpoint'] ?? '') : ($prevChapter ?? '');
-                $nextSlug = is_array($nextChapter) ? ($nextChapter['chapter_endpoint'] ?? $nextChapter['endpoint'] ?? '') : ($nextChapter ?? '');
-            @endphp
-
             @if($prevSlug)
             <a href="{{ route('chapter.show', $prevSlug) }}" 
                class="flex items-center gap-2 bg-dark-700 hover:bg-dark-600 border border-dark-500 hover:border-accent/40 text-slate-300 hover:text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex-1 justify-center">
