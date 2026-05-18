@@ -107,6 +107,30 @@ class MangaApiService
     }
 
     /**
+     * Get manga thumbnail URL by slug (cached).
+     */
+    public function getMangaThumb(string $slug): ?string
+    {
+        $slug = $this->cleanSlug($slug);
+
+        $data = $this->cachedGet("v2_thumb_{$slug}", function () use ($slug) {
+            return $this->getMangaDetail($slug);
+        }, 86400);
+
+        if (isset($data['error'])) {
+            return null;
+        }
+
+        $detail = $data['manga_detail'] ?? $data;
+        if (!is_array($detail)) {
+            return null;
+        }
+
+        $thumb = $detail['thumb'] ?? $detail['image'] ?? $detail['cover'] ?? null;
+        return is_string($thumb) && $thumb !== '' ? $thumb : null;
+    }
+
+    /**
      * Get chapter pages by chapter slug
      */
     public function getChapter(string $chapterSlug): array
