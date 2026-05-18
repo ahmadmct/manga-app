@@ -38,9 +38,9 @@
         </form>
     </div>
 
-    <!-- Genre Filter -->
-    @if(!empty($genres))
-    <div class="mb-6">
+    <!-- Genre Filter (hide when results are shown) -->
+    @if(!empty($genres) && (empty($query) || empty($results)))
+    <div class="mb-6" id="genre-filter">
         <p class="text-xs text-slate-500 mb-2 font-medium uppercase tracking-wider">Browse by Genre</p>
         <div class="flex flex-wrap gap-2">
             @foreach(array_slice($genres, 0, 24) as $genre)
@@ -48,7 +48,7 @@
                 $genreId = $genre['genre_id'] ?? $genre['name'] ?? $genre;
                 $genreName = $genre['genre_name'] ?? $genre['name'] ?? $genre;
             @endphp
-            <a href="{{ route('manga.genre', $genreId) }}" 
+            <a href="{{ route('manga.genre', $genreId) }}"
                class="px-3 py-1.5 bg-dark-700 hover:bg-accent/20 border border-dark-500 hover:border-accent/40 rounded-full text-xs text-slate-300 hover:text-accent-light transition-all">
                 {{ $genreName }}
             </a>
@@ -149,9 +149,12 @@
 
     function updateResults(results, query) {
         const grid = document.getElementById('results-grid');
+        const genreFilter = document.getElementById('genre-filter');
         if (!grid || !results) return;
         
         if (results.length === 0) return;
+
+        if (genreFilter) genreFilter.style.display = 'none';
         
         grid.innerHTML = results.slice(0, 20).map(manga => {
             const rawSlug = manga.endpoint || manga.manga_endpoint || manga.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'manga';
