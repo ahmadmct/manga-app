@@ -100,10 +100,10 @@ class BookmarkController extends Controller
 
     public function toggle(Request $request)
     {
-        $slug = $request->input('slug');
-        $title = $request->input('title');
+        $slug = trim((string) $request->input('slug'));
+        $title = $request->input('title') ?: 'Unknown';
         $thumb = $request->input('thumb');
-        $type = $request->input('type', 'Manga');
+        $type = $request->input('type') ?: 'Manga';
 
         if (auth()->check()) {
             $bookmark = Bookmark::where('user_id', auth()->id())
