@@ -10,13 +10,15 @@ return new class extends Migration
     {
         Schema::create('bookmarks', function (Blueprint $table) {
             $table->id();
-            $table->string('session_id')->index();
+            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->string('session_id')->nullable()->index();
             $table->string('manga_slug');
             $table->string('manga_title');
             $table->string('manga_thumb')->nullable();
             $table->string('manga_type')->default('Manga');
             $table->timestamps();
 
+            $table->unique(['user_id', 'manga_slug']);
             $table->unique(['session_id', 'manga_slug']);
         });
 

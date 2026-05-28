@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bookmark;
 use App\Models\ReadingHistory;
 use App\Services\MangaApiService;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ class BookmarkController extends Controller
 
     public function index()
     {
-        $bookmarks = session('bookmarks', []);
+        $bookmarks = $this->bookmarkItems();
         $history = $this->historyItems();
 
         // Enrich bookmarks with "unread count" from last read -> latest chapter.
@@ -104,6 +105,31 @@ class BookmarkController extends Controller
         $thumb = $request->input('thumb');
         $type = $request->input('type', 'Manga');
 
+        if (auth()->check()) {
+            $bookmark = Bookmark::where('user_id', auth()->id())
+                ->where('manga_slug', $slug)
+                ->first();
+
+            if ($bookmark) {
+                $bookmark->delete();
+                $bookmarked = false;
+            } else {
+                Bookmark::create([
+                    'user_id' => auth()->id(),
+                    'manga_slug' => $slug,
+                    'manga_title' => $title,
+                    'manga_thumb' => $thumb,
+                    'manga_type' => $type,
+                ]);
+                $bookmarked = true;
+            }
+
+            return response()->json([
+                'bookmarked' => $bookmarked,
+                'count' => Bookmark::where('user_id', auth()->id())->count(),
+            ]);
+        }
+
         $bookmarks = session('bookmarks', []);
         $existing = array_search($slug, array_column($bookmarks, 'slug'));
 
@@ -192,6 +218,25 @@ class BookmarkController extends Controller
                 'manga_title' => $history->manga_title,
                 'thumb' => $history->manga_thumb,
                 'read_at' => $history->updated_at?->toDateTimeString() ?? now()->toDateTimeString(),
+            ])
+            ->all();
+    }
+
+    private function bookmarkItems(): array
+    {
+        if (!auth()->check()) {
+            return session('bookmarks', []);
+        }
+
+        return Bookmark::where('user_id', auth()->id())
+            ->latest('updated_at')
+            ->get()
+            ->map(fn (Bookmark $bookmark) => [
+                'slug' => $bookmark->manga_slug,
+                'title' => $bookmark->manga_title,
+                'thumb' => $bookmark->manga_thumb,
+                'type' => $bookmark->manga_type,
+                'bookmarked_at' => $bookmark->created_at?->toDateTimeString() ?? now()->toDateTimeString(),
             ])
             ->all();
     }

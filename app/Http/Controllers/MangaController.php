@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bookmark;
 use App\Models\ReadingHistory;
 use App\Services\MangaApiService;
 use Illuminate\Http\Request;
@@ -36,8 +37,9 @@ class MangaController extends Controller
         // Add to recently viewed
         $this->addToRecentlyViewed($manga, $slug);
 
-        $bookmarks = session('bookmarks', []);
-        $isBookmarked = in_array($slug, array_column($bookmarks, 'slug'));
+        $isBookmarked = auth()->check()
+            ? Bookmark::where('user_id', auth()->id())->where('manga_slug', $slug)->exists()
+            : in_array($slug, array_column(session('bookmarks', []), 'slug'));
         $readChapterSlugs = [];
         $lastRead = null;
 

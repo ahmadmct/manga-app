@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bookmark;
 use App\Models\ReadingHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,6 +32,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
         $this->attachSessionHistoryToAccount($request);
+        $this->attachSessionBookmarksToAccount($request);
 
         return redirect()->intended(route('home'));
     }
@@ -64,6 +66,29 @@ class AuthController extends Controller
                     'manga_title' => $item['manga_title'] ?? null,
                     'manga_thumb' => $item['thumb'] ?? null,
                     'chapter_title' => $item['chapter_title'] ?? null,
+                ]
+            );
+        }
+    }
+
+    private function attachSessionBookmarksToAccount(Request $request): void
+    {
+        $bookmarks = $request->session()->get('bookmarks', []);
+
+        foreach ($bookmarks as $item) {
+            if (!is_array($item) || empty($item['slug'])) {
+                continue;
+            }
+
+            Bookmark::updateOrCreate(
+                [
+                    'user_id' => Auth::id(),
+                    'manga_slug' => trim((string) $item['slug'], '/'),
+                ],
+                [
+                    'manga_title' => $item['title'] ?? 'Unknown',
+                    'manga_thumb' => $item['thumb'] ?? null,
+                    'manga_type' => $item['type'] ?? 'Manga',
                 ]
             );
         }
