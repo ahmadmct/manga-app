@@ -7,6 +7,19 @@ use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\RecommendedController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+});
+
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::resource('/users', UserController::class)->except(['show']);
+});
 
 // Home
 Route::get('/', [HomeController::class, 'index'])->name('home');

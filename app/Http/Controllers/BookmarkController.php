@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ReadingHistory;
 use App\Services\MangaApiService;
 use Illuminate\Http\Request;
 
@@ -12,7 +13,7 @@ class BookmarkController extends Controller
     public function index()
     {
         $bookmarks = session('bookmarks', []);
-        $history = session('reading_history', []);
+        $history = $this->historyItems();
 
         // Enrich bookmarks with "unread count" from last read -> latest chapter.
         $bookmarks = array_values(array_map(function ($bookmark) use ($history) {
@@ -132,6 +133,16 @@ class BookmarkController extends Controller
 
     public function addHistory(Request $request)
     {
+        if ($request->boolean('clear_all')) {
+            if (auth()->check()) {
+                ReadingHistory::where('user_id', auth()->id())->delete();
+            }
+
+            session()->forget('reading_history');
+
+            return response()->json(['success' => true]);
+        }
+
         $data = $request->only(['chapter_slug', 'chapter_title', 'manga_slug', 'manga_title', 'thumb']);
         $history = session('reading_history', []);
 
@@ -140,12 +151,48 @@ class BookmarkController extends Controller
 
         session(['reading_history' => array_slice(array_values($history), 0, 50)]);
 
+        if (auth()->check()) {
+            ReadingHistory::updateOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'chapter_slug' => trim((string) ($data['chapter_slug'] ?? ''), '/'),
+                ],
+                [
+                    'manga_slug' => trim((string) ($data['manga_slug'] ?? ''), '/'),
+                    'manga_title' => $data['manga_title'] ?? null,
+                    'manga_thumb' => $data['thumb'] ?? null,
+                    'chapter_title' => $data['chapter_title'] ?? null,
+                ]
+            );
+        }
+
         return response()->json(['success' => true]);
     }
 
     public function history()
     {
-        $history = session('reading_history', []);
+        $history = $this->historyItems();
         return view('history.index', compact('history'));
+    }
+
+    private function historyItems(): array
+    {
+        if (!auth()->check()) {
+            return session('reading_history', []);
+        }
+
+        return ReadingHistory::where('user_id', auth()->id())
+            ->latest('updated_at')
+            ->limit(50)
+            ->get()
+            ->map(fn (ReadingHistory $history) => [
+                'chapter_slug' => $history->chapter_slug,
+                'chapter_title' => $history->chapter_title,
+                'manga_slug' => $history->manga_slug,
+                'manga_title' => $history->manga_title,
+                'thumb' => $history->manga_thumb,
+                'read_at' => $history->updated_at?->toDateTimeString() ?? now()->toDateTimeString(),
+            ])
+            ->all();
     }
 }

@@ -86,11 +86,12 @@
                     $lastChapter = reset($chapters);
                     $firstSlug = $firstChapter['chapter_endpoint'] ?? $firstChapter['endpoint'] ?? '';
                     $lastSlug = $lastChapter['chapter_endpoint'] ?? $lastChapter['endpoint'] ?? '';
+                    $continueSlug = $lastRead ? ($lastRead['chapter_slug'] ?? $lastRead->chapter_slug ?? $firstSlug) : $firstSlug;
                 @endphp
-                <a href="{{ route('chapter.show', $firstSlug) }}" 
+                <a href="{{ route('chapter.show', $continueSlug) }}" 
                    class="flex-1 bg-accent hover:bg-accent-dark text-white py-2.5 rounded-xl text-sm font-semibold text-center transition-all hover:shadow-lg hover:shadow-accent/30 flex items-center justify-center gap-2">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
-                    Start Reading
+                    {{ $lastRead ? 'Continue Reading' : 'Start Reading' }}
                 </a>
                 @endif
 
@@ -144,13 +145,14 @@
                 $chapterSlug = trim(($chapter['chapter_endpoint'] ?? $chapter['endpoint'] ?? ''), '/');
                 $chapterTitle = $chapter['chapter_title'] ?? $chapter['title'] ?? '';
                 $chapterDate = $chapter['chapter_date'] ?? $chapter['date'] ?? '';
+                $hasRead = in_array($chapterSlug, $readChapterSlugs ?? [], true);
             @endphp
             @if($chapterSlug)
             <a href="{{ route('chapter.show', $chapterSlug) }}" 
-               class="flex items-center justify-between px-5 py-3 hover:bg-dark-700 transition-colors group chapter-item">
+               class="flex items-center justify-between px-5 py-3 hover:bg-dark-700 transition-colors group chapter-item {{ $hasRead ? 'bg-accent/10' : '' }}">
                 <div class="flex items-center gap-3">
-                    <div class="w-1.5 h-1.5 rounded-full bg-dark-500 group-hover:bg-accent-light transition-colors flex-shrink-0"></div>
-                    <span class="text-sm text-slate-300 group-hover:text-white transition-colors">{{ $chapterTitle ?: $chapterSlug }}</span>
+                    <div class="w-1.5 h-1.5 rounded-full {{ $hasRead ? 'bg-accent-light' : 'bg-dark-500' }} group-hover:bg-accent-light transition-colors flex-shrink-0"></div>
+                    <span class="text-sm {{ $hasRead ? 'text-accent-light' : 'text-slate-300' }} group-hover:text-white transition-colors">{{ $chapterTitle ?: $chapterSlug }}</span>
                 </div>
                 <div class="flex items-center gap-3 flex-shrink-0">
                     @if($chapterDate)

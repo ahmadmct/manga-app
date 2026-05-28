@@ -200,6 +200,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
                     </svg>
                 </a>
+                @auth
+                    @if(auth()->user()->is_admin)
+                    <a href="{{ route('users.index') }}" class="px-3 py-1.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-dark-700 transition-colors {{ request()->routeIs('users.*') ? 'text-accent-light bg-dark-700' : '' }}">Users</a>
+                    @endif
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button class="px-3 py-1.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-dark-700 transition-colors">Logout</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="px-3 py-1.5 rounded-lg text-sm text-white bg-accent hover:bg-accent-dark transition-colors">Login</a>
+                @endauth
             </div>
 
             <!-- Mobile Search Button -->

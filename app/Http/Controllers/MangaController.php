@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ReadingHistory;
 use App\Services\MangaApiService;
 use Illuminate\Http\Request;
 
@@ -37,8 +38,30 @@ class MangaController extends Controller
 
         $bookmarks = session('bookmarks', []);
         $isBookmarked = in_array($slug, array_column($bookmarks, 'slug'));
+        $readChapterSlugs = [];
+        $lastRead = null;
 
-        return view('manga.show', compact('manga', 'chapters', 'slug', 'isBookmarked'));
+        if (auth()->check()) {
+            $histories = ReadingHistory::where('user_id', auth()->id())
+                ->where('manga_slug', $slug)
+                ->latest('updated_at')
+                ->get();
+
+            $readChapterSlugs = $histories->pluck('chapter_slug')
+                ->map(fn ($chapterSlug) => trim((string) $chapterSlug, '/'))
+                ->all();
+            $lastRead = $histories->first();
+        } else {
+            $histories = collect(session('reading_history', []))
+                ->filter(fn ($item) => is_array($item) && ($item['manga_slug'] ?? '') === $slug);
+
+            $readChapterSlugs = $histories->pluck('chapter_slug')
+                ->map(fn ($chapterSlug) => trim((string) $chapterSlug, '/'))
+                ->all();
+            $lastRead = $histories->first();
+        }
+
+        return view('manga.show', compact('manga', 'chapters', 'slug', 'isBookmarked', 'readChapterSlugs', 'lastRead'));
     }
 
     public function genre(string $genre, Request $request)

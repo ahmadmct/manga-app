@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ReadingHistory;
 use App\Services\MangaApiService;
-use Illuminate\Http\Request;
 
 class ChapterController extends Controller
 {
@@ -57,6 +57,20 @@ class ChapterController extends Controller
         ]);
 
         session(['reading_history' => array_slice(array_values($history), 0, 50)]);
+
+        if (auth()->check()) {
+            ReadingHistory::updateOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'chapter_slug' => $chapterSlug,
+                ],
+                [
+                    'manga_slug' => $mangaSlug,
+                    'chapter_title' => $chapterTitle,
+                    'progress' => 0,
+                ]
+            );
+        }
     }
 
     /**
