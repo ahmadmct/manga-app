@@ -9,6 +9,7 @@ use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\RecommendedController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ImageProxyController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -47,3 +48,7 @@ Route::get('/bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.
 // History
 Route::post('/history/add', [BookmarkController::class, 'addHistory'])->name('history.add');
 Route::get('/history', [BookmarkController::class, 'history'])->name('history.index');
+
+
+Route::get('/img-proxy', [App\Http\Controllers\ImageProxyController::class, 'proxy'])
+    ->name('img.proxy');

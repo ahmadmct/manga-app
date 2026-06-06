@@ -2,7 +2,11 @@
     "name": "mangalfa/app",
     "type": "project",
     "description": "MangAlfa — Premium Manga Reading Website",
-    "keywords": ["manga", "reader", "laravel"],
+    "keywords": [
+        "manga",
+        "reader",
+        "laravel"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.2",
@@ -23,7 +27,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

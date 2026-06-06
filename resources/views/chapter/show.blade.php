@@ -102,9 +102,16 @@
         @endphp
         <div class="page-wrapper relative" data-page="{{ $imgPage }}" data-index="{{ $index }}">
             <div class="img-skeleton" id="skeleton-{{ $index }}"></div>
+            @php
+    $proxiedHosts = ['img.komiku.org', 'img.mangkomic.me'];
+    $host = parse_url($imgUrl, PHP_URL_HOST);
+    $finalUrl = in_array($host, $proxiedHosts) 
+        ? route('img.proxy', ['url' => $imgUrl]) 
+        : $imgUrl;
+@endphp
             <img 
                 src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
-                data-src="{{ $imgUrl }}"
+                data-src="{{ $finalUrl }}"
                 alt="Page {{ $imgPage }}"
                 class="reader-image lazy-img"
                 id="img-{{ $index }}"
