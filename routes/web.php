@@ -52,3 +52,14 @@ Route::get('/history', [BookmarkController::class, 'history'])->name('history.in
 
 Route::get('/img-proxy', [App\Http\Controllers\ImageProxyController::class, 'proxy'])
     ->name('img.proxy');
+
+Route::get('/test-wa', function () {
+    \App\Services\WhatsappService::kirimWA('Test pesan dari Laravel');
+    return 'Pesan WA dikirim, cek log untuk detailnya.';
+});
+
+Route::get('/test-email-job', function () {
+    (new \App\Jobs\CheckEmailJob())->handle();
+
+    return 'OK';
+});
