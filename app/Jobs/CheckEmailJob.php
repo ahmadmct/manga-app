@@ -5,7 +5,7 @@ namespace App\Jobs;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Webklex\PHPIMAP\ClientManager;
-use App\Services\WhatsappService;
+use App\Services\WhatsAppService;
 
 class CheckEmailJob implements ShouldQueue
 {
@@ -42,8 +42,10 @@ class CheckEmailJob implements ShouldQueue
             $pesan = "📧 EMAIL BARU\n\n";
             $pesan .= "From : {$from}\n";
             $pesan .= "Subject : {$subject}";
+            $pesan .= "\n\n" . date('Y-m-d H:i:s');
+            
 
-            WhatsappService::kirimWA($pesan);
+            WhatsAppService::kirimWA($pesan);
 
             // tandai sudah dibaca
             $message->setFlag('Seen');

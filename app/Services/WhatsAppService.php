@@ -5,7 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class WhatsappService
+class WhatsAppService
 {
     public static function kirimWA(string $pesan): bool
     {

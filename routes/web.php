@@ -54,7 +54,7 @@ Route::get('/img-proxy', [App\Http\Controllers\ImageProxyController::class, 'pro
     ->name('img.proxy');
 
 Route::get('/test-wa', function () {
-    \App\Services\WhatsappService::kirimWA('Test pesan dari Laravel');
+    \App\Services\WhatsAppService::kirimWA('Test pesan dari Laravel');
     return 'Pesan WA dikirim, cek log untuk detailnya.';
 });
 
