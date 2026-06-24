@@ -10,7 +10,20 @@ use App\Http\Controllers\RecommendedController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ImageProxyController;
+use App\Http\Controllers\UnlockController;
 
+Route::get('/unlock-step-1', [UnlockController::class, 'step1'])
+    ->name('unlock.step1');
+
+Route::post('/unlock-step-1', [UnlockController::class, 'step1Submit'])
+    ->name('unlock.step1.submit');
+
+Route::get('/unlock-step-2', [UnlockController::class, 'step2'])
+    ->name('unlock.step2');
+
+Route::post('/unlock-step-2', [UnlockController::class, 'step2Submit'])
+    ->name('unlock.step2.submit');
+    
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
