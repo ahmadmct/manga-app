@@ -23,7 +23,7 @@ Route::get('/unlock-step-2', [UnlockController::class, 'step2'])
 
 Route::post('/unlock-step-2', [UnlockController::class, 'step2Submit'])
     ->name('unlock.step2.submit');
-    
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
@@ -34,7 +34,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('/users', UserController::class)->except(['show']);
 });
-
+Route::middleware('app.lock')->group(function () {
 // Home
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -65,7 +65,7 @@ Route::get('/history', [BookmarkController::class, 'history'])->name('history.in
 
 Route::get('/img-proxy', [App\Http\Controllers\ImageProxyController::class, 'proxy'])
     ->name('img.proxy');
-
+});
 Route::get('/test-wa', function () {
     \App\Services\WhatsAppService::kirimWA('Test pesan dari Laravel');
     return 'Pesan WA dikirim, cek log untuk detailnya.';
@@ -76,3 +76,4 @@ Route::get('/test-email-job', function () {
 
     return 'OK';
 });
+
