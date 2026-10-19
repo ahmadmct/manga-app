@@ -103,21 +103,16 @@
         <div class="page-wrapper relative" data-page="{{ $imgPage }}" data-index="{{ $index }}">
             <div class="img-skeleton" id="skeleton-{{ $index }}"></div>
             @php
-    $proxiedHosts = ['img.komiku.org', 'img.mangkomic.me'];
-    $host = parse_url($imgUrl, PHP_URL_HOST);
-    $finalUrl = in_array($host, $proxiedHosts) 
-        ? route('img.proxy', ['url' => $imgUrl]) 
-        : $imgUrl;
-@endphp
+                $finalUrl = needsProxy($imgUrl)
+                    ? route('img.proxy', ['url' => $imgUrl])
+                    : $imgUrl;
+            @endphp
             <img 
-                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
                 data-src="{{ $finalUrl }}"
                 alt="Page {{ $imgPage }}"
                 class="reader-image lazy-img"
                 id="img-{{ $index }}"
                 loading="lazy"
-                onload="imageLoaded({{ $index }})"
-                onerror="imageError({{ $index }})"
             >
         </div>
         @endforeach
@@ -183,7 +178,9 @@
 @push('scripts')
 <script>
     const totalPages = {{ count($images) }};
-    let loadedImages = new Set();
+    const requestedImages = new Set();
+    const loadedImages = new Set();
+    const imageAttempts = new Map();
     let autoHideTimer = null;
     let controlsVisible = true;
 
@@ -248,31 +245,65 @@
     }, { rootMargin: '200px 0px' });
 
     document.querySelectorAll('.page-wrapper').forEach(w => imageObserver.observe(w));
-    [0, 1, 2].forEach(i => loadImage(i));
 
     function loadImage(index) {
-        if (loadedImages.has(index)) return;
+        if (loadedImages.has(index) || requestedImages.has(index)) return;
         const img = document.getElementById('img-' + index);
         if (!img || !img.dataset.src) return;
-        loadedImages.add(index);
-        img.src = img.dataset.src;
+
+        requestedImages.add(index);
+        const attempt = imageAttempts.get(index) || 0;
+        const source = new URL(img.dataset.src, window.location.href);
+        if (source.pathname === '{{ parse_url(route('img.proxy', [], false), PHP_URL_PATH) }}' && attempt > 0) {
+            source.searchParams.set('retry', String(attempt));
+        }
+        img.src = source.toString();
     }
 
     function imageLoaded(index) {
         const img      = document.getElementById('img-' + index);
         const skeleton = document.getElementById('skeleton-' + index);
+        requestedImages.delete(index);
+        loadedImages.add(index);
         if (img) img.classList.add('loaded');
         if (skeleton) skeleton.style.display = 'none';
     }
 
     function imageError(index) {
+        requestedImages.delete(index);
+        const attempts = imageAttempts.get(index) || 0;
+        if (attempts < 3) {
+            imageAttempts.set(index, attempts + 1);
+            const delays = [700, 1600, 3500];
+            setTimeout(() => loadImage(index), delays[attempts]);
+            return;
+        }
+
         const skeleton = document.getElementById('skeleton-' + index);
         if (skeleton) {
-            skeleton.innerHTML = '<div class="flex items-center justify-center py-8 text-slate-600 text-sm">Image failed to load</div>';
+            skeleton.innerHTML = '<div class="flex flex-col items-center justify-center gap-2 py-8 text-slate-400 text-sm"><span>Image failed to load</span><button type="button" class="text-accent-light hover:text-white underline" onclick="retryImage(' + index + ')">Retry</button></div>';
             skeleton.style.animation = 'none';
             skeleton.style.background = '#1a1a2e';
         }
     }
+
+    function retryImage(index) {
+        imageAttempts.set(index, 0);
+        const skeleton = document.getElementById('skeleton-' + index);
+        if (skeleton) {
+            skeleton.textContent = '';
+            skeleton.style.animation = '';
+            skeleton.style.background = '';
+        }
+        loadImage(index);
+    }
+
+    document.querySelectorAll('.reader-image').forEach((img) => {
+        const index = Number(img.id.replace('img-', ''));
+        img.addEventListener('load', () => imageLoaded(index));
+        img.addEventListener('error', () => imageError(index));
+    });
+    [0, 1, 2].forEach(i => loadImage(i));
 
     // ── Scroll progress ──
     function updateProgress() {
